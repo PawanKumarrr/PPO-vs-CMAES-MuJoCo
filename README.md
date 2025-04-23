@@ -1,155 +1,207 @@
-Comparative Neuroevolution: PPO vs. CMA-ES in MuJoCo Environments
-This repository contains source code, results, and videos for a comparative study of Proximal Policy Optimization (PPO) and Covariance Matrix Adaptation Evolution Strategy (CMA-ES) in MuJoCo continuous-control tasks: Reacher-v5, Ant-v5, HalfCheetah-v5, and InvertedDoublePendulum-v5.
-Project Overview
-This project evaluates gradient-based (PPO) and gradient-free (CMA-ES) methods for evolving control policies in MuJoCo environments. Key findings:
+# Comparative Neuro‑evolution  
+## **PPO vs. CMA‑ES on MuJoCo Continuous‑Control Tasks**
 
-PPO excels in sample efficiency and convergence speed.
-CMA-ES offers robust exploration in complex reward landscapes.
-Experiments cover all four tasks, with results and videos for both methods.
+> **Tasks:** `Reacher‑v5`, `Ant‑v5`, `HalfCheetah‑v5`, `InvertedDoublePendulum‑v5`  
+> **Algorithms:** Proximal Policy Optimization (**PPO**, gradient‑based) **vs.** Covariance Matrix Adaptation Evolution Strategy (**CMA‑ES**, gradient‑free)
 
-The repository includes Python code, Jupyter notebooks, configuration files, result CSVs, and rollout videos. The full report is maintained separately.
-Repository Structure
-├── README.md
+---
+
+### Key Take‑aways
+* **PPO** converges faster and is more sample‑efficient.
+* **CMA‑ES** better explores rugged reward landscapes.
+* Both reach competitive final returns across all four tasks.
+
+---
+
+## Table of Contents
+1. [Project Overview](#project-overview)  
+2. [Repository Layout](#repository-layout)  
+3. [Installation & Environment](#installation--environment)  
+4. [Reproducing Results](#reproducing-results)  
+   * [CMA‑ES](#cma-es)  
+   * [PPO](#ppo)  
+   * [Running on HPC / Slurm](#running-on-hpc--slurm)  
+5. [Results](#results)  
+6. [Videos](#videos)  
+7. [Plots & Visualization](#plots--visualization)  
+8. [Notes & Credits](#notes--credits)
+
+---
+
+## Project Overview
+This study benchmarks a policy‑gradient RL method (**PPO**) against a population‑based evolutionary method (**CMA‑ES**) on four MuJoCo continuous‑control environments. We provide:
+
+* **Reproducible code** (Python 3.8)
+* **Configurable experiments** via YAML
+* **CSV logs** of rewards / fitness
+* **Rollout videos** of best policies
+* **Automated plots** for learning curves and final‑score distributions
+
+---
+
+## Repository Layout
+```text
+.
+├── README.md                ← this file
 ├── LICENSE
 ├── requirements.txt
+│
 ├── code/
-│   ├── cma_es_project/     # CMA-ES implementation
-│   │   ├── config/         # Configuration YAML files
-│   │   ├── neural_network/ # Neural network models
-│   │   ├── optimization/   # CMA-ES algorithm
-│   │   ├── training/       # Training and evaluation scripts
-│   │   ├── utils/          # Logging and plotting utilities
-│   ├── ppo/                # PPO Jupyter notebooks
-│   ├── scripts/            # Slurm job scripts for CMA-ES
-│   ├── tests/              # Unit tests
+│   ├── cma_es_project/      ← CMA‑ES implementation
+│   │   ├── config/          ← YAML configs per task
+│   │   ├── neural_network/
+│   │   ├── optimization/
+│   │   ├── training/
+│   │   └── utils/
+│   └── ppo/                 ← PPO Jupyter notebooks
+│
+├── scripts/                 ← Slurm job scripts
+├── tests/                   ← unit tests
+│
 ├── data/
-│   ├── cma_es_runs/        # CMA-ES results (rewards.csv)
-│   ├── ppo_runs/           # PPO results (CSVs from notebooks)
+│   ├── cma_es_runs/         ← CSV logs (CMA‑ES)
+│   └── ppo_runs/            ← CSV logs (PPO)
+│
 ├── videos/
-│   ├── cma_es/             # CMA-ES rollout videos
-│   ├── ppo/                # PPO rollout videos
-├── plots/                  # Visualization plots
+│   ├── cma_es/              ← rollout MP4s
+│   └── ppo/
+│
+└── plots/                   ← pre‑generated PNGs
+```
 
-Installation
+---
 
-Clone the Repository:
-git clone https://github.com/your-username/PPO-vs-CMAES-MuJoCo.git
+## Installation & Environment
+```bash
+# clone the repo
+git clone https://github.com/PawanKumarrr/PPO-vs-CMAES-MuJoCo.git
 cd PPO-vs-CMAES-MuJoCo
 
-
-Set Up a Virtual Environment:
+# create & activate virtualenv
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate        # on Windows: venv\Scripts\activate
 
-
-Install Dependencies:
+# install Python deps
 pip install -r requirements.txt
+```
 
+### MuJoCo 3.2.6
+1. Download MuJoCo 3.2.6 from <https://mujoco.org>.
+2. Add environment variables (adjust paths):
+   ```bash
+   export MUJOCO_PY_MUJOCO_PATH=/path/to/mujoco-3.2.6
+   export LD_LIBRARY_PATH=/path/to/mujoco-3.2.6/bin:/path/to/glfw-3.3.8/src:$LD_LIBRARY_PATH
+   export MUJOCO_GL=egl   # use 'osmesa' if EGL is unavailable
+   ```
+3. `gymnasium[mujoco]` is installed through `requirements.txt`.
 
-Install MuJoCo:
+---
 
-Download MuJoCo 3.2.6 from mujoco.org.
-Set environment variables, replacing /path/to/ with your MuJoCo and GLFW paths:export MUJOCO_PY_MUJOCO_PATH=/path/to/mujoco-3.2.6
-export LD_LIBRARY_PATH=/path/to/mujoco-3.2.6/bin:/path/to/glfw-3.3.8/src:$LD_LIBRARY_PATH
-export MUJOCO_GL=egl
-
-
-Install gymnasium[mujoco] via requirements.txt.
-
-
-
-Reproducing Results
-CMA-ES
-
-Navigate to CMA-ES Code:
+## Reproducing Results
+### CMA‑ES
+```bash
 cd code/cma_es_project
 
+# train (example: Reacher‑v5)
+python -m main \
+  --mode train \
+  --config config/test.yaml \
+  --seed 505
+```
 
-Run Training:Use configuration files in code/cma_es_project/config/:
+Config files shipped in `code/cma_es_project/config/`:
 
-Reacher-v5: test.yaml (population_size=50, sigma=0.3)
-Ant-v5: test11.yaml (population_size=50, sigma=0.1)
-HalfCheetah-v5: cma_es_2.yaml (population_size=25, sigma=0.2)
-InvertedDoublePendulum-v5: test2.yaml (population_size=50, sigma=0.3)
+| Task | Config | population_size | sigma |
+|------|--------|-----------------|-------|
+| Reacher‑v5 | `test.yaml` | 50 | 0.3 |
+| Ant‑v5 | `test11.yaml` | 50 | 0.1 |
+| HalfCheetah‑v5 | `cma_es_2.yaml` | 25 | 0.2 |
+| InvertedDoublePendulum‑v5 | `test2.yaml` | 50 | 0.3 |
 
-python -m main --mode train --config config/test.yaml --seed 505
+CSV logs → `data/cma_es_runs/<task>/rewards.csv`
 
-Results are saved in data/cma_es_runs/<environment>/rewards.csv.
+**Evaluate best policy**
+```bash
+python -m main \
+  --mode evaluate \
+  --config config/test.yaml \
+  --checkpoint logs/checkpoints/best_model.pth \
+  --seed 505
+```
 
-Evaluate Best Model:Use the checkpoint from training (not included in repo due to size):
-python -m main --mode evaluate --config config/test.yaml --checkpoint logs/checkpoints/best_model.pth --seed 505
-
-
-Run on HPC (Optional):Submit Slurm jobs using scripts in code/scripts/ (e.g., test5.sh):
-sbatch code/scripts/test5.sh
-
-Edit scripts to update paths for your HPC environment (e.g., MUJOCO_PY_MUJOCO_PATH, PYTHONPATH).
-
-
-PPO
-
-Run Notebooks:Open notebooks in code/ppo/ using Jupyter:
+### PPO
+```bash
 cd code/ppo
 jupyter notebook
+```
+Run notebooks:
+* `Reacher_PPO.ipynb`
+* `Ant_PPO.ipynb`
+* `Halfcheetah_PPO.ipynb`
+* `IDP_PPO.ipynb`
 
-Run:
+Logs saved to `data/ppo_runs/<task>/…`
 
-Reacher_PPO.ipynb
-Ant_PPO.ipynb
-Halfcheetah_PPO.ipynb
-IDP_PPO.ipynbResults are saved in data/ppo_runs/<environment>/ (e.g., rewards.csv).
-
-
-Convert to Scripts (Optional):
+*(Optional) convert notebooks to scripts:*
+```bash
 pip install nbconvert
 jupyter nbconvert --to script *.ipynb
 python ppo_reacher.py
+```
 
+### Running on HPC / Slurm
+Adapt `code/scripts/*.sh` to your paths, then:
+```bash
+sbatch code/scripts/test5.sh
+```
 
+---
 
-Results
+## Results
+| Task | PPO Return ↑ | CMA‑ES Return |
+|------|--------------|---------------|
+| Reacher‑v5 | **≈ −5** | −15 |
+| Ant‑v5 | **≈ 2000** | 1800 |
+| HalfCheetah‑v5 | **≈ 5500–6000** | 2500–3000 |
+| InvertedDoublePendulum‑v5 | **≈ 9000** | 6000 |
 
-Reacher-v5: PPO ~ -5, CMA-ES ~ -15
-Ant-v5: PPO ~ 2000, CMA-ES ~ 1800
-HalfCheetah-v5: PPO ~ 5500-6000, CMA-ES ~ 2500-3000
-InvertedDoublePendulum-v5: PPO ~ 9000, CMA-ES ~ 6000
+---
 
-Results are in data/cma_es_runs/<environment>/rewards.csv for CMA-ES and data/ppo_runs/<environment>/ for PPO.
-Videos
-Videos showcase the best PPO and CMA-ES policies for each task:
+## Videos
+| Task | PPO | CMA‑ES |
+|------|-----|--------|
+| Reacher‑v5 | `videos/ppo/reacher.mp4` | `videos/cma_es/reacher.mp4` |
+| Ant‑v5 | `videos/ppo/Ant.mp4` | `videos/cma_es/Ant.mp4` |
+| HalfCheetah‑v5 | `videos/ppo/HalfCheetah.mp4` | `videos/cma_es/HalfCheetha.mp4` |
+| InvertedDoublePendulum‑v5 | `videos/ppo/IDP.mp4` | `videos/cma_es/IDP.mp4` |
 
-Reacher-v5:
-PPO: videos/ppo/reacher.mp4
-CMA-ES: videos/cma_es/reacher.mp4
+> **Large MP4s** are mirrored on Google Drive – see link in the paper.
 
+---
 
-Ant-v5:
-PPO: videos/ppo/Ant.mp4
-CMA-ES: videos/cma_es/Ant.mp4
+## Plots & Visualization
+* Pre‑generated PNGs live in `plots/<task>/`.
+* Re‑generate CMA‑ES learning curves:
+  ```bash
+  python code/cma_es_project/utils/plotter.py --run_dir data/cma_es_runs/Reacher
+  ```
+* PPO curves are produced inside notebooks.
 
+---
 
-HalfCheetah-v5:
-PPO: videos/ppo/HalfCheetah.mp4
-CMA-ES: videos/cma_es/HalfCheetah.mp4
+## Notes & Credits
+* Large checkpoints (`best_model.pth`, `train_results.npy`) are excluded from version control.
+* Experiments used MuJoCo 3.2.6 + Python 3.8.
+* Slurm scripts assume an EGL‑enabled cluster; tweak for local runs.
 
+### Citation
+```
+Author (2025). Comparative Neuro‑evolution: PPO vs. CMA‑ES in MuJoCo Environments. GitHub. https://github.com/PawanKumarrr/PPO-vs-CMAES-MuJoCo
+```
 
-InvertedDoublePendulum-v5:
-PPO: videos/ppo/IDP.mp4
-CMA-ES: videos/cma_es/IDP.mp4
+Released under the MIT License – see [LICENSE](LICENSE).
 
+---
 
-
-Large videos are hosted on Google Drive: Link
-Plots
-Visualization plots (e.g., learning curves, box plots) are in plots/<environment>/. Regenerate using :
-
-CMA-ES: code/cma_es_project/utils/plotter.py
-PPO: Notebooks in code/ppo/
-
-Notes
-
-The report, maintained separately, references this repository for code, results, and videos.
-Large files (e.g., best_model.pth, train_results.npy) are excluded to keep the repository lightweight.
-Slurm scripts (e.g., test5.sh) are tailored for an HPC environment with MuJoCo 3.2.6 and Python 3.8. Adjust paths for local or other systems.
-
+*Happy experimenting 🚀*
 
