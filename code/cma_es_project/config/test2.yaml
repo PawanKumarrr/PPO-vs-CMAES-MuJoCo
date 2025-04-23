@@ -1,0 +1,8 @@
+population_size: 40
+sigma: 0.1
+generations: 1000
+reward_threshold: 15000
+seed: 202
+env_name: 'InvertedDoublePendulum-v5'
+hidden_layers: [12]
+num_eval_episodes: 10

@@ -1,0 +1,8 @@
+env_name: "HalfCheetah-v5"
+population_size: 15
+sigma: 0.4
+generations: 3000
+reward_threshold: 15000
+seed: 123
+hidden_layers: [12,10]
+num_eval_episodes: 15

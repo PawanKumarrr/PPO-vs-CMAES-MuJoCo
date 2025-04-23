@@ -1,0 +1,10 @@
+env_name: "Reacher-v5"
+max_episode_steps: 200
+reward_control_weight: 0.0
+population_size: 100
+sigma: 0.4
+generations: 3000
+reward_threshold: 1
+seed: 101
+hidden_layers: [32]
+num_eval_episodes: 20

@@ -1,0 +1,8 @@
+population_size: 50
+sigma: 0.045
+generations: 3000
+reward_threshold: 15000
+seed: 6167
+env_name: 'Ant-v5'
+hidden_layers: [14,6]
+num_eval_episodes: 10
